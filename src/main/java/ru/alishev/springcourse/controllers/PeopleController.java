@@ -3,9 +3,12 @@ package ru.alishev.springcourse.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.alishev.springcourse.dao.PersonDAO;
 import ru.alishev.springcourse.models.Person;
+
+import javax.validation.Valid;
 
 @Controller
 @RequestMapping("/people")
@@ -36,46 +39,39 @@ public class PeopleController {
     }
 
     @GetMapping("/new")
-    public String newPerson(@ModelAttribute("person") Person person){ //(Model model)
+    public String newPerson(@ModelAttribute("person") Person person) { //(Model model)
 //        model.addAttribute("person" ,new Person());
         return "people/new";
     }
 
     @PostMapping()
-    public String create(@ModelAttribute("person") Person person){
+    public String create(@ModelAttribute("person")  @Valid Person person,
+                         BindingResult bindingResult) {
+        if(bindingResult.hasErrors())//если есть ошибки в форме, которые мы установили
+            return "people/new";
         personDAO.save(person);
         return "redirect:/people"; //редирект
     }
 
-     @GetMapping("/{id}/edit")
-    public String edit(Model model, @PathVariable("id") int id){//извлечь id с помощью pathVariable
+    @GetMapping("/{id}/edit")
+    public String edit(Model model, @PathVariable("id") int id) {//извлечь id с помощью pathVariable
         model.addAttribute("person", personDAO.show(id));
         return "people/edit";
-     }
+    }
 
-     @PatchMapping("/{id}")
-    public String update(@ModelAttribute("person") Person person, @PathVariable("id") int id){
-        personDAO.update(id,person);
+    @PatchMapping("/{id}")
+    public String update(@ModelAttribute("person") @Valid Person person,
+                         BindingResult bindingResult, @PathVariable("id") int id) {
+        if(bindingResult.hasErrors())//если есть ошибки в форме, которые мы установили
+            return "people/edit";
+        personDAO.update(id, person);
         return "redirect:/people";
-     }
+    }
 
-     @DeleteMapping("${id}")
-    public String delete(@PathVariable("id") int id){
+    @DeleteMapping("/{id}")
+    public String delete(@PathVariable("id") int id) {
         personDAO.delete(id);
         return "redirect:/people";
-
-     }
-
-
-
-
-
-
-
-
-
-
-
-
+    }
 
 }
